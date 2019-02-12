@@ -35,13 +35,14 @@ trait RandomState[T] {
     * @return a new random state
     */
   //Hint: Think of the input and output, find the appropriate method that achieve this.
-  def flatMap[U](f: T=>RandomState[U]): RandomState[U] = ??? // TO BE IMPLEMENTED 10 points
+  def flatMap[U](f: T=>RandomState[U]): RandomState[U] = f(get)// TO BE IMPLEMENTED 10 points
 
   /**
     * @return a stream of T values
     */
   //Hint: This a recursively method and it concatenate current element with following elements.
-  def toStream: Stream[T] = ??? // TO BE IMPLEMENTED 12 points
+  def toStream: Stream[T] = Stream[T](get).append(next.toStream)
+
 }
 
 /**
@@ -52,11 +53,14 @@ trait RandomState[T] {
   */
 case class JavaRandomState[T](n: Long, g: Long=>T) extends RandomState[T] {
   //Hint: Remember to use the "seed" to generate next RandomState.
-  def next: RandomState[T] = ??? // TO BE IMPLEMENTED 7 points
+  var r = new Random(n)
+  def next: RandomState[T] = JavaRandomState(r.nextLong(),g)// TO BE IMPLEMENTED 7 points
   //Hint: Think of the input and output.
-  def get: T = ??? // TO BE IMPLEMENTED 5 points
+  def get: T = g(n) // TO BE IMPLEMENTED 5 points
   //Hint: This one need function composition.
-  def map[U](f: (T) => U): RandomState[U] = ??? // TO BE IMPLEMENTED 13 points (alternatives exist)
+  def map[U](f: (T) => U): RandomState[U] = JavaRandomState(n, g andThen f)
+
+  // TO BE IMPLEMENTED 13 points (alternatives exist)
 }
 
 case class DoubleRandomState(n: Long) extends RandomState[Double] {
@@ -77,7 +81,7 @@ object RandomState {
   def apply(n: Long): RandomState[Long] = JavaRandomState[Long](n,identity).next
   def apply(): RandomState[Long] = apply(System.currentTimeMillis)
   //Hint: This is a easy one, remember that it not only convert a Long to a Double but also scale down the number to -1 ~ 1.
-  val longToDouble: Long=>Double = ??? // TO BE IMPLEMENTED 4 points
+  val longToDouble: Long=>Double = _.toDouble/Long.MaxValue // TO BE IMPLEMENTED 4 points
   val doubleToUniformDouble: Double=>UniformDouble = {x => UniformDouble((x+1)/2)}
 }
 
